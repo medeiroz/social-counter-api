@@ -146,50 +146,47 @@ router.get(
  * POST /api/admin/instagram/update-token
  * Atualiza o token do Instagram manualmente
  */
-router.post(
-	"/instagram/update-token",
-	async (req: Request, res: Response) => {
-		try {
-			const { token, expires_in_days } = req.body;
+router.post("/instagram/update-token", async (req: Request, res: Response) => {
+	try {
+		const { token, expires_in_days } = req.body;
 
-			if (!token) {
-				res.status(400).json({
-					error: {
-						code: "TOKEN_REQUIRED",
-						message: "Token is required in request body",
-					},
-				});
-				return;
-			}
-
-			const tokenService = new InstagramTokenRefreshService();
-			const daysUntilExpiry = expires_in_days || 60;
-			const expiresAt = new Date(
-				Date.now() + daysUntilExpiry * 24 * 60 * 60 * 1000,
-			);
-
-			// Salva o token no banco
-			await tokenService.updateToken(token, expiresAt);
-
-			res.status(200).json({
-				message: "Token updated successfully",
-				expires_at: expiresAt.toISOString(),
-				days_until_expiry: daysUntilExpiry,
-			});
-		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : "Unknown error";
-
-			res.status(500).json({
+		if (!token) {
+			res.status(400).json({
 				error: {
-					code: "TOKEN_UPDATE_FAILED",
-					message: "Failed to update token",
-					details: errorMessage,
+					code: "TOKEN_REQUIRED",
+					message: "Token is required in request body",
 				},
 			});
+			return;
 		}
-	},
-);
+
+		const tokenService = new InstagramTokenRefreshService();
+		const daysUntilExpiry = expires_in_days || 60;
+		const expiresAt = new Date(
+			Date.now() + daysUntilExpiry * 24 * 60 * 60 * 1000,
+		);
+
+		// Salva o token no banco
+		await tokenService.updateToken(token, expiresAt);
+
+		res.status(200).json({
+			message: "Token updated successfully",
+			expires_at: expiresAt.toISOString(),
+			days_until_expiry: daysUntilExpiry,
+		});
+	} catch (error) {
+		const errorMessage =
+			error instanceof Error ? error.message : "Unknown error";
+
+		res.status(500).json({
+			error: {
+				code: "TOKEN_UPDATE_FAILED",
+				message: "Failed to update token",
+				details: errorMessage,
+			},
+		});
+	}
+});
 
 /**
  * GET /api/admin/health
