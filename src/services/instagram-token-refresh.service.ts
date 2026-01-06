@@ -158,6 +158,10 @@ export class InstagramTokenRefreshService {
 
 		try {
 			console.log("🔄 Refreshing Instagram access token...");
+			console.log(`📋 App ID: ${this.appId}`);
+			console.log(
+				`🔑 Current token preview: ${currentToken.substring(0, 20)}...`,
+			);
 
 			const response = await axios.get<TokenRefreshResponse>(
 				"https://graph.facebook.com/v23.0/oauth/access_token",
@@ -168,6 +172,7 @@ export class InstagramTokenRefreshService {
 						client_secret: this.appSecret,
 						fb_exchange_token: currentToken,
 					},
+					timeout: 30000,
 				},
 			);
 
@@ -203,12 +208,52 @@ export class InstagramTokenRefreshService {
 			return newToken;
 		} catch (error) {
 			if (axios.isAxiosError(error)) {
-				const errorMessage =
-					error.response?.data?.error?.message || error.message;
+				const errorData = error.response?.data;
+				const errorMessage = errorData?.error?.message || error.message;
+				const errorCode = errorData?.error?.code;
+				const errorType = errorData?.error?.type;
+
+				console.error("❌ Facebook API Error:", {
+					message: errorMessage,
+					code: errorCode,
+					type: errorType,
+					status: error.response?.status,
+					fullError: errorData,
+				});
+
 				throw new Error(`Failed to refresh Instagram token: ${errorMessage}`);
 			}
 			throw error;
 		}
+	}
+
+	/**
+	 * Atualiza o token manualmente
+	 */
+	async updateToken(token: string, expiresAt: Date): Promise<void> {
+		await this.prisma.platformToken.upsert({
+			where: { platform: "instagram" },
+			update: {
+				token: token,
+				expiresAt: expiresAt,
+				updatedAt: new Date(),
+			},
+			create: {
+				platform: "instagram",
+				token: token,
+				expiresAt: expiresAt,
+			},
+		});
+
+		// Atualiza cache
+		InstagramTokenRefreshService.tokenCache = {
+			token: token,
+			expiresAt: expiresAt,
+			lastFetch: new Date(),
+		};
+
+		console.log("✅ Token updated manually");
+		console.log(`📅 Expires at: ${expiresAt.toISOString()}`);
 	}
 
 	/**
