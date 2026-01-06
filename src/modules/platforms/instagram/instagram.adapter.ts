@@ -1,4 +1,5 @@
 import axios from "axios";
+import { InstagramTokenRefreshService } from "../../../services/instagram-token-refresh.service";
 import { logger } from "../../../utils/logger";
 import { retry } from "../../../utils/retry";
 import { BasePlatformAdapter } from "../base/platform.adapter";
@@ -55,6 +56,7 @@ export class InstagramAdapter extends BasePlatformAdapter {
 	readonly platformSlug = "instagram";
 	private accessToken: string;
 	private useGraphAPI: boolean;
+	private tokenService: InstagramTokenRefreshService;
 
 	protected supportedMetrics: InstagramMetricType[] = [
 		"followers",
@@ -67,15 +69,35 @@ export class InstagramAdapter extends BasePlatformAdapter {
 
 	constructor() {
 		super();
-		this.accessToken = process.env.INSTAGRAM_ACCESS_TOKEN || "";
-		this.useGraphAPI = !!this.accessToken;
+		this.tokenService = new InstagramTokenRefreshService();
+		this.accessToken = "";
+		this.useGraphAPI = false;
 
-		if (this.useGraphAPI) {
-			logger.info("[Instagram Adapter] Using Graph API");
-		} else {
-			logger.warn(
-				"[Instagram Adapter] No access token found, using web scraping (may be unreliable)",
+		// Carrega o token do banco de dados de forma assíncrona
+		this.loadTokenFromDatabase();
+	}
+
+	/**
+	 * Carrega o token do banco de dados
+	 */
+	private async loadTokenFromDatabase(): Promise<void> {
+		try {
+			const token = await this.tokenService.getToken();
+			if (token) {
+				this.accessToken = token;
+				this.useGraphAPI = true;
+				logger.info("[Instagram Adapter] Token loaded from database");
+			} else {
+				logger.warn(
+					"[Instagram Adapter] No access token found, using web scraping (may be unreliable)",
+				);
+			}
+		} catch (error) {
+			logger.error(
+				"[Instagram Adapter] Failed to load token from database:",
+				error,
 			);
+			logger.warn("[Instagram Adapter] Falling back to web scraping");
 		}
 	}
 

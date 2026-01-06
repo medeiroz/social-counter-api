@@ -8,8 +8,10 @@ import { swaggerSpec } from "./config/swagger";
 import { authenticateApiKey } from "./middlewares/auth.middleware";
 import { errorHandler } from "./middlewares/error-handler.middleware";
 import { notFound } from "./middlewares/not-found.middleware";
+import adminRoutes from "./modules/admin/admin.routes";
 import instagramRoutes from "./modules/platforms/instagram/instagram.routes";
 import youtubeRoutes from "./modules/platforms/youtube/youtube.routes";
+import { InstagramTokenRefreshService } from "./services/instagram-token-refresh.service";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -59,8 +61,11 @@ app.get("/health", (_req: Request, res: Response) => {
 	});
 });
 
-// Middleware de autenticação (aplica a todas as rotas da API)
-app.use("/api", authenticateApiKey);
+// Rotas administrativas (protegidas por admin key)
+app.use("/api/admin", adminRoutes);
+
+// Middleware de autenticação (aplica a todas as rotas da API v1)
+app.use("/api/v1", authenticateApiKey);
 
 // Rotas da API
 app.use("/api/v1/instagram", instagramRoutes);
@@ -69,6 +74,10 @@ app.use("/api/v1/youtube", youtubeRoutes);
 // Middlewares de erro (devem ser os últimos)
 app.use(notFound);
 app.use(errorHandler);
+
+// Inicia verificação periódica do token do Instagram
+const tokenRefreshService = new InstagramTokenRefreshService();
+tokenRefreshService.startPeriodicCheck();
 
 app.listen(PORT, () => {
 	console.log(`🚀 Server is running on port ${PORT}`);

@@ -41,6 +41,19 @@ const options: swaggerJsdoc.Options = {
 					name: "api_key",
 					description: "API key for authentication (alternative method)",
 				},
+				AdminKeyHeader: {
+					type: "apiKey",
+					in: "header",
+					name: "X-Admin-Key",
+					description: "Admin API key for administrative operations",
+				},
+				AdminKeyQuery: {
+					type: "apiKey",
+					in: "query",
+					name: "admin_key",
+					description:
+						"Admin API key for administrative operations (alternative method)",
+				},
 			},
 			responses: {
 				ValidationError: {

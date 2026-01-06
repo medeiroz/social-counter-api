@@ -58,6 +58,20 @@ model Metric {
   @@map("metrics")
 }
 
+// Configurações de tokens das plataformas
+model PlatformToken {
+  id        String   @id @default(cuid())
+  platform  String   @unique // instagram, youtube, etc
+  token     String   // Access token
+  expiresAt DateTime // Data de expiração do token
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([platform])
+  @@index([expiresAt])
+  @@map("platform_tokens")
+}
+
 // ============================================
 // MODELS PARA V2 (FUTURO - COMENTADOS)
 // ============================================
