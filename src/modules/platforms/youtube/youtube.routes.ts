@@ -1,20 +1,14 @@
 import type { Request, Response } from "express";
 import { Router } from "express";
-import type { MetricType } from "../base/platform.interface";
 import { filterMetadata, parseWithMetadata } from "../../../utils/query-params";
 import { ErrorCodes, sendError, sendSuccess } from "../../../utils/response";
+import type { MetricType } from "../base/platform.interface";
 import { YouTubeService } from "./youtube.service";
 
 const router = Router();
 const youtubeService = new YouTubeService();
 
-/**
- * GET /api/v1/youtube/video?url=<encoded_url>
- * Busca todas as métricas de um vídeo
- *
- * Exemplo:
- *   /api/v1/youtube/video?url=https://www.youtube.com/watch?v=dQw4w9WgXcQ
- */
+// VIDEO: Get all video metrics
 router.get("/video", async (req: Request, res: Response) => {
 	const { url } = req.query;
 
@@ -26,31 +20,21 @@ router.get("/video", async (req: Request, res: Response) => {
 		);
 	}
 
-	const withMetadata = parseWithMetadata(req);
-	const result = await youtubeService.getAllVideoMetrics(url);
-
-	if (result.success) {
-		const filteredData = filterMetadata(result.data, withMetadata);
+	try {
+		const withMetadata = parseWithMetadata(req);
+		const result = await youtubeService.getAllVideoMetrics(url);
+		const filteredData = filterMetadata(result, withMetadata);
 		return sendSuccess(res, filteredData);
+	} catch (error) {
+		return sendError(
+			res,
+			ErrorCodes.EXTERNAL_API_ERROR,
+			error instanceof Error ? error.message : "Failed to fetch video metrics",
+		);
 	}
-
-	return sendError(
-		res,
-		result.error?.code || ErrorCodes.EXTERNAL_API_ERROR,
-		result.error?.message || "Failed to fetch video metrics",
-	);
 });
 
-/**
- * GET /api/v1/youtube/video/:metric?url=<encoded_url>
- * Busca uma métrica específica de um vídeo usando URL completa via query param
- * Métricas suportadas: views, likes, comments
- *
- * Exemplos:
- *   /api/v1/youtube/video/views?url=https://www.youtube.com/watch?v=dQw4w9WgXcQ
- *   /api/v1/youtube/video/likes?url=https://www.youtube.com/watch?v=dQw4w9WgXcQ
- *   /api/v1/youtube/video/comments?url=dQw4w9WgXcQ
- */
+// VIDEO: Get specific video metric
 router.get("/video/:metric", async (req: Request, res: Response) => {
 	const { metric } = req.params;
 	const { url } = req.query;
@@ -76,29 +60,21 @@ router.get("/video/:metric", async (req: Request, res: Response) => {
 		);
 	}
 
-	const withMetadata = parseWithMetadata(req);
-	const result = await youtubeService.getMetric(url, metric as MetricType);
-
-	if (result.success) {
-		const filteredData = filterMetadata(result.data, withMetadata);
+	try {
+		const withMetadata = parseWithMetadata(req);
+		const result = await youtubeService.getMetric(url, metric as MetricType);
+		const filteredData = filterMetadata(result, withMetadata);
 		return sendSuccess(res, filteredData);
+	} catch (error) {
+		return sendError(
+			res,
+			ErrorCodes.EXTERNAL_API_ERROR,
+			error instanceof Error ? error.message : "Failed to fetch video metric",
+		);
 	}
-
-	return sendError(
-		res,
-		result.error?.code || ErrorCodes.EXTERNAL_API_ERROR,
-		result.error?.message || "Failed to fetch video metric",
-	);
 });
 
-/**
- * GET /api/v1/youtube/channel?channel=<channel_identifier>
- * Busca todas as métricas de um canal
- *
- * Exemplos:
- *   /api/v1/youtube/channel?channel=@manualdomundo
- *   /api/v1/youtube/channel?channel=UCKHhA5hN2UohhFDfNXB_cvQ
- */
+// CHANNEL: Get all channel metrics
 router.get("/channel", async (req: Request, res: Response) => {
 	const { channel } = req.query;
 
@@ -110,30 +86,23 @@ router.get("/channel", async (req: Request, res: Response) => {
 		);
 	}
 
-	const withMetadata = parseWithMetadata(req);
-	const result = await youtubeService.getAllMetrics(channel);
-
-	if (result.success) {
-		const filteredData = filterMetadata(result.data, withMetadata);
+	try {
+		const withMetadata = parseWithMetadata(req);
+		const result = await youtubeService.getAllMetrics(channel);
+		const filteredData = filterMetadata(result, withMetadata);
 		return sendSuccess(res, filteredData);
+	} catch (error) {
+		return sendError(
+			res,
+			ErrorCodes.EXTERNAL_API_ERROR,
+			error instanceof Error
+				? error.message
+				: "Failed to fetch channel metrics",
+		);
 	}
-
-	return sendError(
-		res,
-		result.error?.code || ErrorCodes.EXTERNAL_API_ERROR,
-		result.error?.message || "Failed to fetch channel metrics",
-	);
 });
 
-/**
- * GET /api/v1/youtube/channel/:metric?channel=<channel_identifier>
- * Busca uma métrica específica de um canal
- * Métricas suportadas: subscribers, video_count, total_views
- *
- * Exemplos:
- *   /api/v1/youtube/channel/subscribers?channel=@manualdomundo
- *   /api/v1/youtube/channel/total_views?channel=UCKHhA5hN2UohhFDfNXB_cvQ
- */
+// CHANNEL: Get specific channel metric
 router.get("/channel/:metric", async (req: Request, res: Response) => {
 	const { metric } = req.params;
 	const { channel } = req.query;
@@ -163,19 +132,21 @@ router.get("/channel/:metric", async (req: Request, res: Response) => {
 		);
 	}
 
-	const withMetadata = parseWithMetadata(req);
-	const result = await youtubeService.getMetric(channel, metric as MetricType);
-
-	if (result.success) {
-		const filteredData = filterMetadata(result.data, withMetadata);
+	try {
+		const withMetadata = parseWithMetadata(req);
+		const result = await youtubeService.getMetric(
+			channel,
+			metric as MetricType,
+		);
+		const filteredData = filterMetadata(result, withMetadata);
 		return sendSuccess(res, filteredData);
+	} catch (error) {
+		return sendError(
+			res,
+			ErrorCodes.EXTERNAL_API_ERROR,
+			error instanceof Error ? error.message : "Failed to fetch channel metric",
+		);
 	}
-
-	return sendError(
-		res,
-		result.error?.code || ErrorCodes.EXTERNAL_API_ERROR,
-		result.error?.message || "Failed to fetch channel metric",
-	);
 });
 
 export default router;

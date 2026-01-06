@@ -5,13 +5,18 @@ import type { CachedMetric, MetricData } from "./cache.types";
 
 /**
  * TTL padrão por plataforma (em minutos)
+ * Para contador em tempo real, use TTLs mais baixos
  */
 const TTL_CONFIG: Record<string, number> = {
-	instagram: 5,
-	youtube: 10,
+	instagram: 2, // Reduzido para 2 minutos (tempo real)
+	"instagram:followers": 1, // Followers atualiza a cada 1 minuto
+	"instagram:following": 5, // Following menos crítico
+	"instagram:posts_count": 10, // Posts count menos crítico
+	youtube: 5,
+	"youtube:subscribers": 2, // Subscribers mais frequente
 	tiktok: 3,
 	twitch: 5,
-	"twitch:live_viewers": 1, // Caso especial para live viewers
+	"twitch:live_viewers": 0.5, // 30 segundos para viewers ao vivo
 };
 
 /**

@@ -1,6 +1,6 @@
+import type { NextFunction, Request, Response } from "express";
 import { logger } from "../utils/logger";
 import { ErrorCodes, sendError } from "../utils/response";
-import type { Request, Response, NextFunction } from "express";
 
 /**
  * Middleware de autenticação por API Key

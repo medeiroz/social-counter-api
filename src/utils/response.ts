@@ -9,10 +9,7 @@ export function sendSuccess<T>(
 	data: T,
 	statusCode = 200,
 ): Response<SuccessResponse<T>> {
-	return res.status(statusCode).json({
-		success: true,
-		data,
-	});
+	return res.status(statusCode).json(data);
 }
 
 /**
@@ -26,7 +23,6 @@ export function sendError(
 	details?: unknown,
 ): Response<ErrorResponse> {
 	return res.status(statusCode).json({
-		success: false,
 		error: {
 			code,
 			message,

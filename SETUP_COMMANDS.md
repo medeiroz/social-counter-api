@@ -65,6 +65,7 @@ Make sure that:
 - Prisma client generated
 - API running on `http://localhost:3000`
 - Health check available at `http://localhost:3000/health`
+- Swagger documentation available at `http://localhost:3000/api-docs`
 
 ---
 

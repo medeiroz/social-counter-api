@@ -1,11 +1,7 @@
 // Tipos globais para a aplicação
-export type SuccessResponse<T = unknown> = {
-	success: true;
-	data: T;
-};
+export type SuccessResponse<T = unknown> = T;
 
 export type ErrorResponse = {
-	success: false;
 	error: {
 		code: string;
 		message: string;

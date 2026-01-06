@@ -10,6 +10,7 @@ REST API for aggregating social media metrics from multiple platforms (Instagram
 - **PostgreSQL caching**: TTL-based cache to reduce external API calls
 - **API Key authentication**: Secure endpoints with simple API key validation
 - **Flexible metadata control**: `with-metadata` query parameter to control response format
+- **Interactive API documentation**: Swagger/OpenAPI documentation available at `/api-docs`
 - **TypeScript**: Full type safety across the codebase
 - **Adapter pattern**: Easy to extend with new platforms
 - **Docker support**: Ready for containerized deployment
@@ -116,6 +117,21 @@ curl http://localhost:3000/api/v1/instagram/account?username=instagram&api_key=y
 
 **Development mode**: If `API_KEY` is not set in `.env`, authentication is disabled.
 
+## 📖 Interactive API Documentation
+
+Swagger UI is available at `/api-docs` for interactive API exploration and testing.
+
+**Access the documentation:**
+```bash
+http://localhost:3000/api-docs
+```
+
+The Swagger interface allows you to:
+- ✅ View all available endpoints and their parameters
+- ✅ Test API requests directly from the browser
+- ✅ See request/response schemas and examples
+- ✅ Authenticate using your API key
+
 ## 📚 API Endpoints
 
 ### Query Parameters
@@ -221,17 +237,25 @@ curl -H "X-API-Key: your_key" "http://localhost:3000/api/v1/youtube/video/views?
 ### Success Response (with metadata - default)
 ```json
 {
-  "success": true,
-  "data": {
-    "platform": "instagram",
-    "identifier": "instagram",
-    "metrics": {
-      "followers": 672000000,
-      "following": 123,
-      "posts_count": 7456
+  "metrics": {
+    "followers": {
+      "value": 672000000,
+      "cached": true,
+      "fetchedAt": "2026-01-05T10:30:00.000Z",
+      "expiresAt": "2026-01-05T10:35:00.000Z"
     },
-    "cached": true,
-    "fetchedAt": "2026-01-05T10:30:00.000Z"
+    "following": {
+      "value": 123,
+      "cached": true,
+      "fetchedAt": "2026-01-05T10:30:00.000Z",
+      "expiresAt": "2026-01-05T10:35:00.000Z"
+    },
+    "posts_count": {
+      "value": 7456,
+      "cached": true,
+      "fetchedAt": "2026-01-05T10:30:00.000Z",
+      "expiresAt": "2026-01-05T10:35:00.000Z"
+    }
   }
 }
 ```
@@ -239,19 +263,16 @@ curl -H "X-API-Key: your_key" "http://localhost:3000/api/v1/youtube/video/views?
 ### Success Response (without metadata - `with-metadata=false`)
 ```json
 {
-  "success": true,
-  "data": {
-    "followers": 672000000,
-    "following": 123,
-    "posts_count": 7456
-  }
+  "followers": 672000000,
+  "following": 123,
+  "posts_count": 7456
 }
+```
 ```
 
 ### Error Response
 ```json
 {
-  "success": false,
   "error": {
     "code": "USER_NOT_FOUND",
     "message": "Instagram user not found"
@@ -262,7 +283,6 @@ curl -H "X-API-Key: your_key" "http://localhost:3000/api/v1/youtube/video/views?
 ### Authentication Error
 ```json
 {
-  "success": false,
   "error": {
     "code": "UNAUTHORIZED",
     "message": "API key is required. Provide it via X-API-Key header or api_key query parameter."
@@ -487,6 +507,7 @@ docker exec -it social-counter-api sh
 - [x] `with-metadata` query parameter
 - [x] Error handling middleware
 - [x] Health check endpoint
+- [x] Swagger/OpenAPI documentation
 
 ### 🔄 In Progress
 - [ ] Rate limiting middleware
@@ -498,7 +519,6 @@ docker exec -it social-counter-api sh
 - [ ] Redis for high-performance caching (v2)
 - [ ] Background jobs with BullMQ (v2)
 - [ ] Advanced monitoring and logging (v2)
-- [ ] OpenAPI/Swagger documentation
 
 ## 📄 License
 

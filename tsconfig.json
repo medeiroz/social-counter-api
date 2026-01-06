@@ -38,12 +38,6 @@
 		"allowSyntheticDefaultImports": true,
 		"esModuleInterop": true
 	},
-	"include": [
-		"src/**/*"
-	],
-	"exclude": [
-		"node_modules",
-		"dist",
-		"prisma"
-	]
+	"include": ["src/**/*"],
+	"exclude": ["node_modules", "dist", "prisma"]
 }

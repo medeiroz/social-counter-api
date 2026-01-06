@@ -8,6 +8,7 @@ export interface InstagramProfile {
 	followers: number;
 	following: number;
 	posts_count: number;
+	website?: string;
 }
 
 export interface InstagramPost {

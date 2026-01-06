@@ -53,6 +53,8 @@ interface InstagramPostAPIResponse {
 export class InstagramAdapter extends BasePlatformAdapter {
 	readonly platformName = "Instagram";
 	readonly platformSlug = "instagram";
+	private accessToken: string;
+	private useGraphAPI: boolean;
 
 	protected supportedMetrics: InstagramMetricType[] = [
 		"followers",
@@ -62,6 +64,20 @@ export class InstagramAdapter extends BasePlatformAdapter {
 		"comments",
 		"views",
 	];
+
+	constructor() {
+		super();
+		this.accessToken = process.env.INSTAGRAM_ACCESS_TOKEN || "";
+		this.useGraphAPI = !!this.accessToken;
+
+		if (this.useGraphAPI) {
+			logger.info("[Instagram Adapter] Using Graph API");
+		} else {
+			logger.warn(
+				"[Instagram Adapter] No access token found, using web scraping (may be unreliable)",
+			);
+		}
+	}
 
 	/**
 	 * Verifica se a métrica é suportada
@@ -78,8 +94,118 @@ export class InstagramAdapter extends BasePlatformAdapter {
 	}
 
 	/**
-	 * Busca dados do perfil do Instagram via API interna
-	 * Usa o endpoint público do Instagram que retorna JSON
+	 * Busca dados do perfil usando Instagram Graph API
+	 */
+	private async fetchProfileDataGraphAPI(
+		username: string,
+	): Promise<InstagramProfile> {
+		try {
+			// Para o Graph API, precisamos do ID da conta de negócio
+			// Se o username for fornecido, tentamos buscar pelo business discovery
+			const businessAccountId = process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID;
+
+			if (!businessAccountId) {
+				throw new Error("INSTAGRAM_BUSINESS_ACCOUNT_ID not configured");
+			}
+
+			const fields =
+				"id,username,name,biography,profile_picture_url,followers_count,follows_count,media_count,website";
+			const apiUrl = `https://graph.facebook.com/v23.0/${businessAccountId}?fields=business_discovery.username(${username}){${fields}}&access_token=${this.accessToken}`;
+
+			const response = await retry(() =>
+				axios.get(apiUrl, {
+					timeout: 15000,
+				}),
+			);
+
+			const businessDiscovery = response.data.business_discovery;
+
+			if (!businessDiscovery) {
+				throw new Error("Business discovery data not found");
+			}
+
+			const profile: InstagramProfile = {
+				username: businessDiscovery.username,
+				followers: businessDiscovery.followers_count ?? 0,
+				following: businessDiscovery.follows_count ?? 0,
+				posts_count: businessDiscovery.media_count ?? 0,
+			};
+
+			if (businessDiscovery.name) profile.full_name = businessDiscovery.name;
+			if (businessDiscovery.biography)
+				profile.biography = businessDiscovery.biography;
+			if (businessDiscovery.profile_picture_url)
+				profile.profile_pic_url = businessDiscovery.profile_picture_url;
+			if (businessDiscovery.website)
+				profile.website = businessDiscovery.website;
+
+			return profile;
+		} catch (error) {
+			if (axios.isAxiosError(error)) {
+				const errorData = error.response?.data?.error;
+				if (errorData) {
+					logger.error(
+						`Instagram Graph API Error: ${errorData.message}`,
+						errorData,
+					);
+					throw new Error(`Instagram Graph API: ${errorData.message}`);
+				}
+			}
+
+			logger.error(
+				`Error fetching Instagram profile via Graph API for @${username}`,
+				error,
+			);
+			throw new Error(`Failed to fetch Instagram profile: ${error}`);
+		}
+	}
+
+	/**
+	 * Busca todas as métricas de conta de uma vez (otimizado - 1 requisição)
+	 */
+	async getAllAccountMetrics(
+		username: string,
+	): Promise<Record<string, MetricResult>> {
+		const normalizedUsername = this.normalizeResource(username);
+
+		logger.info(
+			`Fetching all account metrics for @${normalizedUsername} (optimized)...`,
+		);
+
+		// Usa Graph API se disponível, senão fallback para web scraping
+		const profile = this.useGraphAPI
+			? await this.fetchProfileDataGraphAPI(normalizedUsername)
+			: await this.fetchProfileData(normalizedUsername);
+
+		// Monta metadata uma vez para todos
+		const metadata: InstagramMetricMetadata = {};
+		if (profile.full_name) metadata.display_name = profile.full_name;
+		if (profile.profile_pic_url) metadata.avatar_url = profile.profile_pic_url;
+		if (profile.is_verified !== undefined)
+			metadata.verified = profile.is_verified;
+		if (profile.is_private !== undefined)
+			metadata.is_private = profile.is_private;
+		if (profile.biography) metadata.biography = profile.biography;
+		if (profile.website) metadata.external_url = profile.website;
+
+		return {
+			followers: {
+				value: BigInt(profile.followers),
+				metadata: { ...metadata },
+			},
+			following: {
+				value: BigInt(profile.following),
+				metadata: { ...metadata },
+			},
+			posts_count: {
+				value: BigInt(profile.posts_count),
+				metadata: { ...metadata },
+			},
+		};
+	}
+
+	/**
+	 * Busca dados do perfil do Instagram via API interna (fallback)
 	 */
 	private async fetchProfileData(username: string): Promise<InstagramProfile> {
 		// Tenta primeiro a API interna do Instagram
@@ -142,6 +268,49 @@ export class InstagramAdapter extends BasePlatformAdapter {
 			logger.error(`Error fetching Instagram profile for @${username}`, error);
 			throw new Error(`Failed to fetch Instagram profile: ${error}`);
 		}
+	}
+
+	/**
+	 * Busca todas as métricas de um post de uma vez (otimizado - 1 requisição)
+	 */
+	async getAllPostMetrics(
+		postIdentifier: string,
+	): Promise<Record<string, MetricResult>> {
+		const shortcode = this.extractShortcode(postIdentifier);
+
+		logger.info(
+			`Fetching all post metrics for shortcode '${shortcode}' (optimized)...`,
+		);
+
+		const post = await this.fetchPostData(shortcode);
+
+		// Monta metadata uma vez para todos
+		const metadata: InstagramMetricMetadata = {};
+		if (post.shortcode) metadata.post_shortcode = post.shortcode;
+		if (post.id) metadata.post_id = post.id;
+		if (post.caption) metadata.post_caption = post.caption;
+		if (post.thumbnail) metadata.post_thumbnail = post.thumbnail;
+		if (post.timestamp) metadata.post_timestamp = post.timestamp;
+		if (post.owner?.username) metadata.display_name = post.owner.username;
+		if (post.likesCount !== undefined) metadata.like_count = post.likesCount;
+		if (post.commentsCount !== undefined)
+			metadata.comment_count = post.commentsCount;
+		if (post.viewsCount !== undefined) metadata.view_count = post.viewsCount;
+
+		return {
+			likes: {
+				value: BigInt(post.likesCount ?? 0),
+				metadata: { ...metadata },
+			},
+			comments: {
+				value: BigInt(post.commentsCount ?? 0),
+				metadata: { ...metadata },
+			},
+			views: {
+				value: BigInt(post.viewsCount ?? 0),
+				metadata: { ...metadata },
+			},
+		};
 	}
 
 	/**
@@ -239,7 +408,7 @@ export class InstagramAdapter extends BasePlatformAdapter {
 	 */
 	private extractShortcode(input: string): string {
 		// Se já é um shortcode (sem / ou http), retorna direto
-		if (!/[\/:]/.test(input)) {
+		if (!/[/:]/.test(input)) {
 			return input;
 		}
 
@@ -328,7 +497,10 @@ export class InstagramAdapter extends BasePlatformAdapter {
 			`Fetching Instagram metric '${metric}' for user @${username}...`,
 		);
 
-		const profile = await this.fetchProfileData(username);
+		// Usa Graph API se disponível, senão fallback para web scraping
+		const profile = this.useGraphAPI
+			? await this.fetchProfileDataGraphAPI(username)
+			: await this.fetchProfileData(username);
 
 		// Mapeia métricas para campos do profile
 		const metricMap: Record<string, number> = {
