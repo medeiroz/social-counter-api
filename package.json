@@ -1,0 +1,56 @@
+{
+	"name": "social-counter-api",
+	"version": "1.0.0",
+	"description": "",
+	"main": "src/index.ts",
+	"prisma": {
+		"config": "prisma/prisma.config.ts"
+	},
+	"scripts": {
+		"dev": "tsx watch --env-file=.env src/index.ts",
+		"start": "node dist/index.js",
+		"build": "tsc",
+		"test": "vitest run",
+		"typecheck": "tsc --noEmit",
+		"format": "npx @biomejs/biome format",
+		"format:fix": "npx @biomejs/biome format --write",
+		"lint": "npx @biomejs/biome lint",
+		"lint:fix": "npx @biomejs/biome lint --write",
+		"check": "npx @biomejs/biome check",
+		"check:fix": "npx @biomejs/biome check --write",
+		"db:migrate": "prisma migrate dev",
+		"db:generate": "prisma generate",
+		"db:seed": "tsx prisma/seed.ts",
+		"db:studio": "prisma studio",
+		"db:deploy": "prisma migrate deploy"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"@prisma/adapter-pg": "^7.2.0",
+		"@prisma/client": "^7.2.0",
+		"axios": "^1.6.0",
+		"cors": "^2.8.5",
+		"dotenv": "^17.2.3",
+		"express": "^5.2.1",
+		"helmet": "^7.1.0",
+		"morgan": "^1.10.1",
+		"pg": "^8.16.3",
+		"sqlite3": "^5.1.7",
+		"zod": "^3.22.0"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.3.11",
+		"@types/cors": "^2.8.17",
+		"@types/express": "^5.0.6",
+		"@types/morgan": "^1.9.10",
+		"@types/node": "^25.0.3",
+		"@types/pg": "^8.16.0",
+		"prisma": "^7.2.0",
+		"ts-node": "^10.9.2",
+		"tsx": "^4.21.0",
+		"typescript": "^5.9.3",
+		"vitest": "^4.0.16"
+	}
+}

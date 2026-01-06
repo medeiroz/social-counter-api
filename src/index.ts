@@ -1,0 +1,46 @@
+import cors from "cors";
+import type { Request, Response } from "express";
+import express from "express";
+import helmet from "helmet";
+import morgan from "morgan";
+import { authenticateApiKey } from "./middlewares/auth.middleware";
+import { errorHandler } from "./middlewares/error-handler.middleware";
+import { notFound } from "./middlewares/not-found.middleware";
+import instagramRoutes from "./modules/platforms/instagram/instagram.routes";
+import youtubeRoutes from "./modules/platforms/youtube/youtube.routes";
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Middlewares de segurança e parsing
+app.use(helmet());
+app.use(cors());
+app.use(morgan("dev"));
+app.use(express.json());
+
+// Health check (sem autenticação)
+app.get("/health", (_req: Request, res: Response) => {
+	res.status(200).json({
+		status: "ok",
+		message: "Social Counter API is running",
+		timestamp: new Date().toISOString(),
+	});
+});
+
+// Middleware de autenticação (aplica a todas as rotas da API)
+app.use("/api", authenticateApiKey);
+
+// Rotas da API
+app.use("/api/v1/instagram", instagramRoutes);
+app.use("/api/v1/youtube", youtubeRoutes);
+
+// Middlewares de erro (devem ser os últimos)
+app.use(notFound);
+app.use(errorHandler);
+
+app.listen(PORT, () => {
+	console.log(`🚀 Server is running on port ${PORT}`);
+	console.log(`📊 Health check: http://localhost:${PORT}/health`);
+	console.log(`📱 Instagram API: http://localhost:${PORT}/api/v1/instagram`);
+	console.log(`📺 YouTube API: http://localhost:${PORT}/api/v1/youtube`);
+});

@@ -1,0 +1,91 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// SOCIAL COUNTER API - DATABASE SCHEMA
+// ============================================
+
+// Plataformas de mídia social suportadas
+model Platform {
+  id        String   @id @default(cuid())
+  name      String   @unique // instagram, youtube, tiktok, twitch
+  slug      String   @unique // identificador em URLs
+  baseUrl   String?  // URL base da API (se aplicável)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  metrics Metric[]
+
+  @@index([slug])
+  @@index([isActive])
+  @@map("platforms")
+}
+
+// Métricas coletadas (cache + histórico)
+model Metric {
+  id         String   @id @default(cuid())
+  platformId String
+  platform   Platform @relation(fields: [platformId], references: [id], onDelete: Cascade)
+
+  resource   String // Username, video ID/URL, ou qualquer identificador do recurso
+  metricType String // followers, subscribers, live_viewers, posts_count, views, etc
+
+  // Valor da métrica
+  value    BigInt // Suporta números grandes (ex: milhões de seguidores)
+  metadata Json?  // Dados extras: { display_name, avatar_url, verified, video_title, etc }
+
+  // Controle de cache
+  fetchedAt DateTime @default(now()) // Quando foi buscado
+  expiresAt DateTime // Quando expira o cache
+
+  // Identificação da requisição (opcional para v2 com API Keys)
+  requestId   String? // Para tracking de requisições
+  requestedBy String? // IP ou identificador de quem solicitou
+
+  @@unique([platformId, resource, metricType, fetchedAt]) // Evita duplicatas exatas no mesmo momento
+  @@index([platformId, resource, metricType]) // Busca rápida de métricas
+  @@index([expiresAt]) // Limpeza de cache expirado
+  @@index([fetchedAt]) // Ordenação por data
+  @@map("metrics")
+}
+
+// ============================================
+// MODELS PARA V2 (FUTURO - COMENTADOS)
+// ============================================
+
+// API Keys para autenticação (v2)
+// model ApiKey {
+//   id          String    @id @default(cuid())
+//   key         String    @unique
+//   name        String    // Nome descritivo da key
+//   rateLimit   Int       @default(1000) // Requisições por minuto
+//   isActive    Boolean   @default(true)
+//   createdAt   DateTime  @default(now())
+//   expiresAt   DateTime? // Null = nunca expira
+//   lastUsedAt  DateTime?
+//
+//   @@index([key])
+//   @@map("api_keys")
+// }
+
+// Rate Limiting (v2 - para uso com Redis)
+// model RateLimit {
+//   id           String   @id @default(cuid())
+//   identifier   String   // IP ou API Key
+//   endpoint     String   // Endpoint acessado
+//   requestCount Int      @default(0)
+//   windowStart  DateTime // Início da janela de tempo
+//
+//   @@unique([identifier, endpoint, windowStart])
+//   @@index([windowStart])
+//   @@map("rate_limits")
+// }
