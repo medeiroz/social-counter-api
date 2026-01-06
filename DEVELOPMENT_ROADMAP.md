@@ -107,26 +107,57 @@ src/
 
 ### 1. API Endpoints
 
+#### 🎉 Implemented Features
+
+**Authentication:**
+- ✅ API Key authentication via `X-API-Key` header or `api_key` query parameter
+- ✅ Optional authentication (can be disabled in development)
+- ✅ 401 UNAUTHORIZED responses for missing/invalid keys
+
+**Query Parameters:**
+- ✅ `with-metadata` - Control metadata inclusion in responses (default: true)
+  - Values: `true` (default), `false`, `0`, `no`
+  - Removes metadata from single and multiple metric responses
+
+**Caching:**
+- ✅ PostgreSQL-based caching with TTL
+- ✅ BigInt to Number conversion for JSON serialization
+- ✅ Cache hit/miss tracking
+
+**Error Handling:**
+- ✅ Standardized error responses with error codes
+- ✅ Detailed error messages for debugging
+- ✅ No stack traces in production
+
 #### Endpoint Structure
 ```
-GET /api/v1/metrics/:platform/:username/:metric
-GET /api/v1/metrics/:platform/:username
+# Instagram
+GET /api/v1/instagram/account?username=<username>&with-metadata=<true|false>
+GET /api/v1/instagram/account/:metric?username=<username>&with-metadata=<true|false>
+GET /api/v1/instagram/post?url=<post_url>&with-metadata=<true|false>
+GET /api/v1/instagram/post/:metric?url=<post_url>&with-metadata=<true|false>
 
-Exemplos:
-- GET /api/v1/metrics/instagram/cristiano/followers
-- GET /api/v1/metrics/youtube/mrbeast/subscribers
-- GET /api/v1/metrics/twitch/ninja/live_viewers
-- GET /api/v1/metrics/tiktok/charlidamelio/followers
+# YouTube
+GET /api/v1/youtube/channel?channel=<identifier>&with-metadata=<true|false>
+GET /api/v1/youtube/channel/:metric?channel=<identifier>&with-metadata=<true|false>
+GET /api/v1/youtube/video?url=<video_url>&with-metadata=<true|false>
+GET /api/v1/youtube/video/:metric?url=<video_url>&with-metadata=<true|false>
+
+Examples:
+- GET /api/v1/instagram/account/followers?username=instagram
+- GET /api/v1/youtube/channel/subscribers?channel=@mkbhd
+- GET /api/v1/youtube/video/views?url=https://youtube.com/watch?v=...
+- GET /api/v1/instagram/post/likes?url=https://instagram.com/p/ABC123/
 ```
 
 #### Supported Metrics by Platform
 
-| Platform | Available Metrics |
-|------------|---------------------|
-| **Instagram** | `followers`, `following`, `posts_count`, `avg_likes` |
-| **YouTube** | `subscribers`, `total_views`, `video_count`, `views` (specific) |
-| **TikTok** | `followers`, `following`, `likes`, `views` (specific) |
-| **Twitch** | `followers`, `live_viewers`, `total_views` |
+| Platform | Available Metrics | Status |
+|------------|---------------------|--------|
+| **Instagram** | Account: `followers`, `following`, `posts_count`<br>Post: `likes`, `comments`, `views` | ✅ Implemented |
+| **YouTube** | Channel: `subscribers`, `video_count`, `total_views`<br>Video: `views`, `likes`, `comments` | ✅ Implemented |
+| **TikTok** | `followers`, `following`, `likes`, `views` (specific) | 🔮 Planned |
+| **Twitch** | `followers`, `live_viewers`, `total_views` | 🔮 Planned |
 
 ### 2. Cache System (PostgreSQL)
 
@@ -283,33 +314,42 @@ class InstagramAdapter implements PlatformAdapter {
 
 ### **Phase 1: Foundation (Week 1)**
 - [x] Initial setup (Node, TypeScript, Express, Prisma)
-- [ ] Create database schema (simplified)
-- [ ] Implement cache system with PostgreSQL
+- [x] Create database schema (simplified)
+- [x] Implement cache system with PostgreSQL
+- [x] Simple logger (console)
+- [x] Standardized error middleware
+- [x] API Key authentication middleware
 - [ ] Rate limiting middleware (in-memory)
-- [ ] Simple logger (console)
 - [ ] Validation with Zod
-- [ ] Standardized error middleware
 
 ### **Phase 2: First Platform - Instagram (Week 2)**
-- [ ] Implement InstagramAdapter
-- [ ] Endpoints: `/api/v1/metrics/instagram/:username/:metric`
-- [ ] PostgreSQL cache with 5-minute TTL
-- [ ] Basic retry logic (3 attempts)
-- [ ] Error handling
+- [x] Implement InstagramAdapter
+- [x] Endpoints: `/api/v1/instagram/account` and `/api/v1/instagram/post`
+- [x] PostgreSQL cache with 5-minute TTL
+- [x] Basic retry logic (3 attempts)
+- [x] Error handling
+- [x] Account metrics: followers, following, posts_count
+- [x] Post metrics: likes, comments, views
 
 ### **Phase 3: Platform Expansion (Week 3)**
-- [ ] Implement YouTubeAdapter (official API)
+- [x] Implement YouTubeAdapter (official API)
+- [x] Channel endpoints: `/api/v1/youtube/channel`
+- [x] Video endpoints: `/api/v1/youtube/video`
+- [x] Channel metrics: subscribers, video_count, total_views
+- [x] Video metrics: views, likes, comments
+- [x] Query string parameters for consistency
 - [ ] Implement TwitchAdapter (official API)
 - [ ] Implement TikTokAdapter
-- [ ] Unified endpoint: `/api/v1/metrics/:platform/:username/:metric`
-- [ ] Multiple metrics endpoint: `/api/v1/metrics/:platform/:username`
 
 ### **Phase 4: Polish & Deploy (Week 4)**
-- [ ] Basic documentation (README)
-- [ ] Health check with DB status
-- [ ] Initial deploy (Railway or Render)
-- [ ] Manual testing
-- [ ] CORS and Helmet configured
+- [x] Basic documentation (README)
+- [x] Health check endpoint
+- [x] CORS and Helmet configured
+- [x] Docker support (Dockerfile + docker-compose)
+- [x] Authentication with API Keys
+- [x] with-metadata query parameter
+- [ ] Deploy to production (Railway or Render)
+- [ ] Manual testing in production
 
 ### **📦 Phase 5: v2 - Optimizations (Future)**
 - [ ] Add Redis for high-performance cache

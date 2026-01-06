@@ -3,9 +3,6 @@
 	"version": "1.0.0",
 	"description": "",
 	"main": "src/index.ts",
-	"prisma": {
-		"config": "prisma/prisma.config.ts"
-	},
 	"scripts": {
 		"dev": "tsx watch --env-file=.env src/index.ts",
 		"start": "node dist/index.js",

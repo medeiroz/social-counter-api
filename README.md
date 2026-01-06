@@ -2,13 +2,17 @@
 
 REST API for aggregating social media metrics from multiple platforms (Instagram, YouTube, TikTok, Twitch, etc.) with built-in caching and authentication.
 
+[![GitHub](https://img.shields.io/badge/GitHub-medeiroz%2Fsocial--counter--api-blue?logo=github)](https://github.com/medeiroz/social-counter-api)
+
 ## 🚀 Features
 
 - **Multi-platform support**: Instagram, YouTube (TikTok and Twitch coming soon)
 - **PostgreSQL caching**: TTL-based cache to reduce external API calls
 - **API Key authentication**: Secure endpoints with simple API key validation
+- **Flexible metadata control**: `with-metadata` query parameter to control response format
 - **TypeScript**: Full type safety across the codebase
 - **Adapter pattern**: Easy to extend with new platforms
+- **Docker support**: Ready for containerized deployment
 - **Rate limiting ready**: Built-in middleware structure for rate limiting
 
 ## 📋 Supported Platforms & Metrics
@@ -35,7 +39,7 @@ REST API for aggregating social media metrics from multiple platforms (Instagram
 
 1. **Clone the repository**
 ```bash
-git clone <repository-url>
+git clone git@github.com:medeiroz/social-counter-api.git
 cd social-counter-api
 ```
 
@@ -69,11 +73,6 @@ npm run db:migrate -- --name init
 5. **Generate Prisma client**
 ```bash
 npm run db:generate
-```
-
-6. **Seed initial data**
-```bash
-npm run db:seed
 ```
 
 ## 🚦 Usage
@@ -118,6 +117,23 @@ curl http://localhost:3000/api/v1/instagram/account?username=instagram&api_key=y
 **Development mode**: If `API_KEY` is not set in `.env`, authentication is disabled.
 
 ## 📚 API Endpoints
+
+### Query Parameters
+
+All endpoints support the following optional query parameter:
+
+- **`with-metadata`** (boolean, default: `true`): Controls whether metadata is included in the response
+  - `true` or `1`: Include metadata (platform, identifier, fetchedAt, cached)
+  - `false`, `0`, or `"no"`: Return only the metrics data
+
+**Example:**
+```bash
+# With metadata (default)
+curl -H "X-API-Key: your_key" "http://localhost:3000/api/v1/instagram/account?username=instagram"
+
+# Without metadata
+curl -H "X-API-Key: your_key" "http://localhost:3000/api/v1/instagram/account?username=instagram&with-metadata=false"
+```
 
 ### Health Check
 ```
@@ -202,7 +218,7 @@ curl -H "X-API-Key: your_key" "http://localhost:3000/api/v1/youtube/video/views?
 
 ## 📊 Response Format
 
-### Success Response
+### Success Response (with metadata - default)
 ```json
 {
   "success": true,
@@ -216,6 +232,18 @@ curl -H "X-API-Key: your_key" "http://localhost:3000/api/v1/youtube/video/views?
     },
     "cached": true,
     "fetchedAt": "2026-01-05T10:30:00.000Z"
+  }
+}
+```
+
+### Success Response (without metadata - `with-metadata=false`)
+```json
+{
+  "success": true,
+  "data": {
+    "followers": 672000000,
+    "following": 123,
+    "posts_count": 7456
   }
 }
 ```
@@ -257,6 +285,11 @@ Cache is automatically managed and expired entries are cleaned up periodically.
 ```
 src/
 ├── index.ts                    # Application entry point
+├── apis/
+│   ├── index.ts               # API routes aggregator
+│   └── social-counter/
+│       ├── instagram.ts       # Instagram endpoints
+│       └── youtube.ts         # YouTube endpoints
 ├── lib/
 │   └── prisma.ts              # Prisma client singleton
 ├── middlewares/
@@ -268,11 +301,12 @@ src/
 │   │   └── cache.service.ts   # Cache management
 │   └── platforms/
 │       ├── base/              # Base interfaces
-│       ├── instagram/         # Instagram adapter
-│       └── youtube/           # YouTube adapter
+│       ├── instagram/         # Instagram adapter + routes
+│       └── youtube/           # YouTube adapter + routes
 ├── types/                     # TypeScript type definitions
 └── utils/
     ├── logger.ts              # Logging utilities
+    ├── query-params.ts        # Query parameter utilities
     └── response.ts            # Response standardization
 ```
 
@@ -444,12 +478,27 @@ docker exec -it social-counter-api sh
 
 ## 🚧 Roadmap
 
-- [ ] Add TikTok adapter
-- [ ] Add Twitch adapter
-- [ ] Implement rate limiting middleware
-- [ ] Add Redis for high-performance caching (v2)
+### ✅ Completed
+- [x] Instagram adapter (account + post metrics)
+- [x] YouTube adapter (channel + video metrics)
+- [x] API key authentication
+- [x] PostgreSQL caching with TTL
+- [x] Docker support (development + production)
+- [x] `with-metadata` query parameter
+- [x] Error handling middleware
+- [x] Health check endpoint
+
+### 🔄 In Progress
+- [ ] Rate limiting middleware
+- [ ] Zod validation for query parameters
+
+### 📋 Planned
+- [ ] TikTok adapter
+- [ ] Twitch adapter
+- [ ] Redis for high-performance caching (v2)
 - [ ] Background jobs with BullMQ (v2)
 - [ ] Advanced monitoring and logging (v2)
+- [ ] OpenAPI/Swagger documentation
 
 ## 📄 License
 
