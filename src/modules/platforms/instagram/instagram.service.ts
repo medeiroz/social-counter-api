@@ -47,10 +47,13 @@ export class InstagramService {
 			cached: false,
 		};
 
-		// Publica no MQTT
+		// Publica no MQTT (apenas value e metric)
 		const resourceId = extractResourceId(username);
 		mqttService
-			.publish("instagram", "profile", resourceId, metric, response)
+			.publish("instagram", "profile", resourceId, metric, {
+				value: response.value,
+				metric: response.metric,
+			})
 			.catch((err) =>
 				logger.error("[Instagram Service] Failed to publish to MQTT:", err),
 			);
@@ -184,8 +187,12 @@ export class InstagramService {
 			// Publica cada métrica no MQTT
 			const resourceId = extractResourceId(postIdentifier);
 			for (const [metric, metricData] of Object.entries(data)) {
+				const md = metricData as { value: number; metric: string };
 				mqttService
-					.publish("instagram", "post", resourceId, metric, metricData)
+					.publish("instagram", "post", resourceId, metric, {
+						value: md.value,
+						metric: md.metric,
+					})
 					.catch((err) =>
 						logger.error(
 							`[Instagram Service] Failed to publish ${metric} to MQTT:`,
@@ -268,8 +275,12 @@ export class InstagramService {
 			// Publica cada métrica no MQTT
 			const resourceId = extractResourceId(username);
 			for (const [metric, metricData] of Object.entries(data)) {
+				const md = metricData as { value: number; metric: string };
 				mqttService
-					.publish("instagram", "profile", resourceId, metric, metricData)
+					.publish("instagram", "profile", resourceId, metric, {
+						value: md.value,
+						metric: md.metric,
+					})
 					.catch((err) =>
 						logger.error(
 							`[Instagram Service] Failed to publish ${metric} to MQTT:`,
@@ -319,8 +330,12 @@ export class InstagramService {
 			// Publica cada métrica no MQTT
 			const resourceId = extractResourceId(username);
 			for (const [metric, metricData] of Object.entries(data)) {
+				const md = metricData as { value: number; metric: string };
 				mqttService
-					.publish("instagram", "profile", resourceId, metric, metricData)
+					.publish("instagram", "profile", resourceId, metric, {
+						value: md.value,
+						metric: md.metric,
+					})
 					.catch((err) =>
 						logger.error(
 							`[Instagram Service] Failed to publish ${metric} to MQTT:`,

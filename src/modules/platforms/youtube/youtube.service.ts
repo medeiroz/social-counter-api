@@ -58,7 +58,10 @@ export class YouTubeService {
 			: "video";
 		const resourceId = extractResourceId(channelIdentifier);
 		mqttService
-			.publish("youtube", resource, resourceId, metric, response)
+			.publish("youtube", resource, resourceId, metric, {
+				value: response.value,
+				metric: response.metric,
+			})
 			.catch((err) =>
 				logger.error("[YouTube Service] Failed to publish to MQTT:", err),
 			);
@@ -109,8 +112,12 @@ export class YouTubeService {
 		// Publica cada métrica no MQTT
 		const resourceId = extractResourceId(videoIdentifier);
 		for (const [metric, metricData] of Object.entries(data)) {
+			const md = metricData as { value: number; metric: string };
 			mqttService
-				.publish("youtube", "video", resourceId, metric, metricData)
+				.publish("youtube", "video", resourceId, metric, {
+					value: md.value,
+					metric: md.metric,
+				})
 				.catch((err) =>
 					logger.error(
 						`[YouTube Service] Failed to publish ${metric} to MQTT:`,
@@ -165,8 +172,12 @@ export class YouTubeService {
 		// Publica cada métrica no MQTT
 		const resourceId = extractResourceId(channelIdentifier);
 		for (const [metric, metricData] of Object.entries(data)) {
+			const md = metricData as { value: number; metric: string };
 			mqttService
-				.publish("youtube", "channel", resourceId, metric, metricData)
+				.publish("youtube", "channel", resourceId, metric, {
+					value: md.value,
+					metric: md.metric,
+				})
 				.catch((err) =>
 					logger.error(
 						`[YouTube Service] Failed to publish ${metric} to MQTT:`,
