@@ -9,7 +9,7 @@ import type { CachedMetric, MetricData } from "./cache.types";
  */
 const TTL_CONFIG: Record<string, number> = {
 	instagram: 2, // Reduzido para 2 minutos (tempo real)
-	"instagram:followers": 1, // Followers atualiza a cada 1 minuto
+	"instagram:followers": 0.5, // Followers atualiza a cada 30 segundos
 	"instagram:following": 5, // Following menos crítico
 	"instagram:posts_count": 10, // Posts count menos crítico
 	youtube: 5,
@@ -48,15 +48,15 @@ export async function get(
 
 		const metric = await prisma.metric.findFirst({
 			where: {
-				platformId: platform.id,
+				platform_id: platform.id,
 				resource: resource.toLowerCase(),
-				metricType,
-				expiresAt: {
+				metric_type: metricType,
+				expires_at: {
 					gt: new Date(), // Ainda não expirou
 				},
 			},
 			orderBy: {
-				fetchedAt: "desc", // Pega o mais recente
+				fetched_at: "desc", // Pega o mais recente
 			},
 		});
 
@@ -68,10 +68,11 @@ export async function get(
 		logger.debug(`Cache hit: ${platformSlug}/${resource}/${metricType}`);
 
 		const result: CachedMetric = {
+			metric: metricType,
 			value: metric.value,
 			cached: true,
-			fetchedAt: metric.fetchedAt.toISOString(),
-			expiresAt: metric.expiresAt.toISOString(),
+			fetchedAt: metric.fetched_at.toISOString(),
+			expiresAt: metric.expires_at.toISOString(),
 		};
 
 		if (metric.metadata) {
@@ -116,17 +117,17 @@ export async function set(
 
 		await prisma.metric.create({
 			data: {
-				platformId: platform.id,
+				platform_id: platform.id,
 				resource: resource.toLowerCase(),
-				metricType,
+				metric_type: metricType,
 				value,
 				...(data.metadata && {
 					metadata: data.metadata as Prisma.InputJsonValue,
 				}),
-				fetchedAt: now,
-				expiresAt,
-				...(requestId && { requestId }),
-				...(requestedBy && { requestedBy }),
+				fetched_at: now,
+				expires_at: expiresAt,
+				...(requestId && { request_id: requestId }),
+				...(requestedBy && { requested_by: requestedBy }),
 			},
 		});
 		logger.debug(
@@ -144,7 +145,7 @@ export async function cleanup(): Promise<number> {
 	try {
 		const result = await prisma.metric.deleteMany({
 			where: {
-				expiresAt: {
+				expires_at: {
 					lt: new Date(),
 				},
 			},
@@ -170,10 +171,10 @@ export async function getStats(): Promise<{
 		const [total, expired, byPlatform] = await Promise.all([
 			prisma.metric.count(),
 			prisma.metric.count({
-				where: { expiresAt: { lt: new Date() } },
+				where: { expires_at: { lt: new Date() } },
 			}),
 			prisma.metric.groupBy({
-				by: ["platformId"],
+				by: ["platform_id"],
 				_count: true,
 			}),
 		]);
@@ -190,9 +191,9 @@ export async function getStats(): Promise<{
 		const byPlatformStats = byPlatform.reduce(
 			(
 				acc: Record<string, number>,
-				item: { platformId: string; _count: number },
+				item: { platform_id: string; _count: number },
 			) => {
-				const slug = platformMap[item.platformId] || item.platformId;
+				const slug = platformMap[item.platform_id] || item.platform_id;
 				acc[slug] = item._count;
 				return acc;
 			},

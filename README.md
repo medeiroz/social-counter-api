@@ -8,6 +8,7 @@ REST API for aggregating social media metrics from multiple platforms (Instagram
 
 - **Multi-platform support**: Instagram, YouTube (TikTok and Twitch coming soon)
 - **PostgreSQL caching**: TTL-based cache to reduce external API calls
+- **MQTT Integration**: Real-time notifications for IoT devices
 - **API Key authentication**: Secure endpoints with simple API key validation
 - **Flexible metadata control**: `with-metadata` query parameter to control response format
 - **Interactive API documentation**: Swagger/OpenAPI documentation available at `/api-docs`
@@ -59,12 +60,20 @@ PORT=3000
 DATABASE_URL="postgresql://user:password@localhost:5432/social_counter?schema=public"
 YOUTUBE_API_KEY="your_youtube_api_key_here"
 API_KEY="your_secure_api_key_here"
+
+# MQTT Configuration (optional)
+MQTT_BROKER_URL="mqtt://localhost:1883"
+MQTT_USERNAME="your_mqtt_username"
+MQTT_PASSWORD="your_mqtt_password"
+MQTT_CLIENT_ID="social-counter-api"
 ```
 
 **Generate a secure API key:**
 ```bash
 openssl rand -hex 32
 ```
+
+**For MQTT setup instructions, see [MQTT_SETUP.md](MQTT_SETUP.md)**
 
 4. **Run database migrations**
 ```bash

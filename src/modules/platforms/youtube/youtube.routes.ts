@@ -3,10 +3,9 @@ import { Router } from "express";
 import { filterMetadata, parseWithMetadata } from "../../../utils/query-params";
 import { ErrorCodes, sendError, sendSuccess } from "../../../utils/response";
 import type { MetricType } from "../base/platform.interface";
-import { YouTubeService } from "./youtube.service";
+import { youtubeService } from "./youtube.service";
 
 const router = Router();
-const youtubeService = new YouTubeService();
 
 // VIDEO: Get all video metrics
 router.get("/video", async (req: Request, res: Response) => {
@@ -61,8 +60,8 @@ router.get("/video/:metric", async (req: Request, res: Response) => {
 	}
 
 	try {
-		const withMetadata = parseWithMetadata(req);
 		const result = await youtubeService.getMetric(url, metric as MetricType);
+		const withMetadata = parseWithMetadata(req);
 		const filteredData = filterMetadata(result, withMetadata);
 		return sendSuccess(res, filteredData);
 	} catch (error) {

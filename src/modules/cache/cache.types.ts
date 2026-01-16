@@ -18,6 +18,7 @@ export interface MetricData {
 }
 
 export interface CachedMetric extends MetricData {
+	metric: string;
 	cached: boolean;
 	fetchedAt: string;
 	expiresAt: string;

@@ -3,10 +3,9 @@ import { Router } from "express";
 import { filterMetadata, parseWithMetadata } from "../../../utils/query-params";
 import { ErrorCodes, sendError, sendSuccess } from "../../../utils/response";
 import type { MetricType } from "../base/platform.interface";
-import { InstagramService } from "./instagram.service";
+import { instagramService } from "./instagram.service";
 
 const router = Router();
-const instagramService = new InstagramService();
 
 // POST: Get all post metrics
 router.get("/post", async (req: Request, res: Response) => {

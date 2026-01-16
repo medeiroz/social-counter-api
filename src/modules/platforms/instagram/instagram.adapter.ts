@@ -134,6 +134,8 @@ export class InstagramAdapter extends BasePlatformAdapter {
 				"id,username,name,biography,profile_picture_url,followers_count,follows_count,media_count,website";
 			const apiUrl = `https://graph.facebook.com/v23.0/${businessAccountId}?fields=business_discovery.username(${username}){${fields}}&access_token=${this.accessToken}`;
 
+			console.log("Request URL", apiUrl); // Debugging line
+
 			const response = await retry(() =>
 				axios.get(apiUrl, {
 					timeout: 15000,
@@ -212,14 +214,17 @@ export class InstagramAdapter extends BasePlatformAdapter {
 
 		return {
 			followers: {
+				metric: "followers",
 				value: BigInt(profile.followers),
 				metadata: { ...metadata },
 			},
 			following: {
+				metric: "following",
 				value: BigInt(profile.following),
 				metadata: { ...metadata },
 			},
 			posts_count: {
+				metric: "posts_count",
 				value: BigInt(profile.posts_count),
 				metadata: { ...metadata },
 			},
@@ -321,14 +326,17 @@ export class InstagramAdapter extends BasePlatformAdapter {
 
 		return {
 			likes: {
+				metric: "likes",
 				value: BigInt(post.likesCount ?? 0),
 				metadata: { ...metadata },
 			},
 			comments: {
+				metric: "comments",
 				value: BigInt(post.commentsCount ?? 0),
 				metadata: { ...metadata },
 			},
 			views: {
+				metric: "views",
 				value: BigInt(post.viewsCount ?? 0),
 				metadata: { ...metadata },
 			},
@@ -507,6 +515,7 @@ export class InstagramAdapter extends BasePlatformAdapter {
 			if (post.viewsCount !== undefined) metadata.view_count = post.viewsCount;
 
 			return {
+				metric,
 				value: BigInt(metricValue),
 				metadata,
 			};
@@ -551,6 +560,7 @@ export class InstagramAdapter extends BasePlatformAdapter {
 		if (profile.biography) metadata.biography = profile.biography;
 
 		return {
+			metric,
 			value: BigInt(value),
 			metadata,
 		};

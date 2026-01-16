@@ -15,61 +15,90 @@ datasource db {
 
 // Plataformas de mídia social suportadas
 model Platform {
-  id        String   @id @default(cuid())
-  name      String   @unique // instagram, youtube, tiktok, twitch
-  slug      String   @unique // identificador em URLs
-  baseUrl   String?  // URL base da API (se aplicável)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(cuid())
+  name       String   @unique // instagram, youtube, tiktok, twitch
+  slug       String   @unique // identificador em URLs
+  base_url   String?  @map("base_url") // URL base da API (se aplicável)
+  is_active  Boolean  @default(true) @map("is_active")
+  created_at DateTime @default(now()) @map("created_at")
+  updated_at DateTime @updatedAt @map("updated_at")
 
   metrics Metric[]
 
   @@index([slug])
-  @@index([isActive])
+  @@index([is_active])
   @@map("platforms")
 }
 
 // Métricas coletadas (cache + histórico)
 model Metric {
-  id         String   @id @default(cuid())
-  platformId String
-  platform   Platform @relation(fields: [platformId], references: [id], onDelete: Cascade)
+  id          String   @id @default(cuid())
+  platform_id String   @map("platform_id")
+  platform    Platform @relation(fields: [platform_id], references: [id], onDelete: Cascade)
 
-  resource   String // Username, video ID/URL, ou qualquer identificador do recurso
-  metricType String // followers, subscribers, live_viewers, posts_count, views, etc
+  resource    String // Username, video ID/URL, ou qualquer identificador do recurso
+  metric_type String @map("metric_type") // followers, subscribers, live_viewers, posts_count, views, etc
 
   // Valor da métrica
   value    BigInt // Suporta números grandes (ex: milhões de seguidores)
   metadata Json?  // Dados extras: { display_name, avatar_url, verified, video_title, etc }
 
   // Controle de cache
-  fetchedAt DateTime @default(now()) // Quando foi buscado
-  expiresAt DateTime // Quando expira o cache
+  fetched_at DateTime @default(now()) @map("fetched_at") // Quando foi buscado
+  expires_at DateTime @map("expires_at") // Quando expira o cache
 
   // Identificação da requisição (opcional para v2 com API Keys)
-  requestId   String? // Para tracking de requisições
-  requestedBy String? // IP ou identificador de quem solicitou
+  request_id   String? @map("request_id") // Para tracking de requisições
+  requested_by String? @map("requested_by") // IP ou identificador de quem solicitou
 
-  @@unique([platformId, resource, metricType, fetchedAt]) // Evita duplicatas exatas no mesmo momento
-  @@index([platformId, resource, metricType]) // Busca rápida de métricas
-  @@index([expiresAt]) // Limpeza de cache expirado
-  @@index([fetchedAt]) // Ordenação por data
+  @@unique([platform_id, resource, metric_type, fetched_at])
+  @@index([platform_id, resource, metric_type])
+  @@index([expires_at])
+  @@index([fetched_at])
   @@map("metrics")
 }
 
 // Configurações de tokens das plataformas
 model PlatformToken {
-  id        String   @id @default(cuid())
-  platform  String   @unique // instagram, youtube, etc
-  token     String   // Access token
-  expiresAt DateTime // Data de expiração do token
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(cuid())
+  platform   String   @unique // instagram, youtube, etc
+  token      String   // Access token
+  expires_at DateTime @map("expires_at") // Data de expiração do token
+  created_at DateTime @default(now()) @map("created_at")
+  updated_at DateTime @updatedAt @map("updated_at")
 
   @@index([platform])
-  @@index([expiresAt])
+  @@index([expires_at])
   @@map("platform_tokens")
+}
+
+// Métricas agendadas para busca automática
+model ScheduledMetric {
+  id          String   @id @default(cuid())
+  platform    String   // instagram, youtube, etc
+  resource    String   // profile, post, channel, video, etc
+  resource_id String   @map("resource_id") // Username, post ID, video ID, etc (limpo, sem URLs)
+  metric      String   // followers, likes, views, etc
+
+  // Controle de agendamento
+  interval_minutes    Float     @default(5) @map("interval_minutes") // Intervalo de busca em minutos (suporta decimais, ex: 0.5 para 30 segundos)
+  expires_at          DateTime  @map("expires_at") // Data de expiração do agendamento
+  next_run_at         DateTime  @default(now()) @map("next_run_at") // Próxima execução agendada
+  last_fetched_at     DateTime? @map("last_fetched_at") // Última vez que foi buscado
+  is_active           Boolean   @default(true) @map("is_active")
+  notify_only_changed Boolean   @default(false) @map("notify_only_changed") // Se true, só publica no MQTT quando o valor mudar
+  last_value          String?   @map("last_value") // Último valor buscado (para comparação)
+
+  // Auditoria
+  created_at DateTime @default(now()) @map("created_at")
+  created_by String?  @map("created_by") // IP ou identificador de quem criou
+
+  @@unique([platform, resource, resource_id, metric])
+  @@index([platform, resource, resource_id])
+  @@index([is_active, expires_at])
+  @@index([next_run_at])
+  @@index([last_fetched_at])
+  @@map("scheduled_metrics")
 }
 
 // ============================================

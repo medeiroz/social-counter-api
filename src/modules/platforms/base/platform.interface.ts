@@ -15,6 +15,7 @@ export type MetricType =
 	| "comments"; // Para comentários de um vídeo específico
 
 export interface MetricResult {
+	metric: MetricType;
 	value: number | bigint;
 	metadata?: {
 		display_name?: string;

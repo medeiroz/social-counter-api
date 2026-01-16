@@ -371,6 +371,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
 			if (video.viewCount) metadata.view_count = video.viewCount;
 
 			return {
+				metric,
 				value: BigInt(metricValue),
 				metadata,
 			};
@@ -412,6 +413,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
 			metadata.hidden_subscribers = channel.hiddenSubscriberCount;
 
 		return {
+			metric,
 			value: BigInt(value),
 			metadata,
 		};

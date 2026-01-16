@@ -1,4 +1,6 @@
+import { mqttService } from "../../../services/mqtt.service";
 import { logger } from "../../../utils/logger";
+import { extractResourceId } from "../../../utils/resource-id";
 import { get as cacheGet, set as cacheSet } from "../../cache/cache.service";
 import type { MetricType } from "../base/platform.interface";
 import { InstagramAdapter } from "./instagram.adapter";
@@ -39,11 +41,21 @@ export class InstagramService {
 			`[Instagram Service] Successfully fetched and cached ${metric} for @${username}`,
 		);
 
-		return {
+		const response = {
 			...result,
 			value: Number(result.value),
 			cached: false,
 		};
+
+		// Publica no MQTT
+		const resourceId = extractResourceId(username);
+		mqttService
+			.publish("instagram", "profile", resourceId, metric, response)
+			.catch((err) =>
+				logger.error("[Instagram Service] Failed to publish to MQTT:", err),
+			);
+
+		return response;
 	}
 
 	/**
@@ -114,10 +126,25 @@ export class InstagramService {
 				`[Instagram Service] Successfully fetched and cached all post metrics for '${postIdentifier}'`,
 			);
 
-			return {
+			const response = {
 				post: postIdentifier,
 				metrics: data,
 			};
+
+			// Publica cada métrica no MQTT
+			const resourceId = extractResourceId(postIdentifier);
+			for (const [metric, metricData] of Object.entries(data)) {
+				mqttService
+					.publish("instagram", "post", resourceId, metric, metricData)
+					.catch((err) =>
+						logger.error(
+							`[Instagram Service] Failed to publish ${metric} to MQTT:`,
+							err,
+						),
+					);
+			}
+
+			return response;
 		} catch (_error) {
 			// Fallback para o método antigo se falhar
 			logger.warn(
@@ -148,16 +175,31 @@ export class InstagramService {
 				`[Instagram Service] Fetched ${Object.keys(data).length}/${metrics.length} post metrics for '${postIdentifier}'`,
 			);
 
-			return {
+			const response = {
 				post: postIdentifier,
 				metrics: data,
 				...(errors.length > 0 && { partial_errors: errors }),
 			};
+
+			// Publica cada métrica no MQTT
+			const resourceId = extractResourceId(postIdentifier);
+			for (const [metric, metricData] of Object.entries(data)) {
+				mqttService
+					.publish("instagram", "post", resourceId, metric, metricData)
+					.catch((err) =>
+						logger.error(
+							`[Instagram Service] Failed to publish ${metric} to MQTT:`,
+							err,
+						),
+					);
+			}
+
+			return response;
 		}
 	}
 
 	/**
-	 * Busca todas as métricas disponíveis (com cache)
+	 * Busca todas as métricas de uma vez (perfil completo)
 	 * Otimizado: faz apenas 1 requisição ao invés de 3
 	 */
 	async getAllMetrics(username: string) {
@@ -218,10 +260,25 @@ export class InstagramService {
 				`[Instagram Service] Successfully fetched and cached all metrics for @${username}`,
 			);
 
-			return {
+			const response = {
 				username,
 				metrics: data,
 			};
+
+			// Publica cada métrica no MQTT
+			const resourceId = extractResourceId(username);
+			for (const [metric, metricData] of Object.entries(data)) {
+				mqttService
+					.publish("instagram", "profile", resourceId, metric, metricData)
+					.catch((err) =>
+						logger.error(
+							`[Instagram Service] Failed to publish ${metric} to MQTT:`,
+							err,
+						),
+					);
+			}
+
+			return response;
 		} catch (_error) {
 			// Fallback para o método antigo se falhar
 			logger.warn(
@@ -253,11 +310,29 @@ export class InstagramService {
 				`[Instagram Service] Fetched ${Object.keys(data).length}/${metrics.length} metrics for @${username}`,
 			);
 
-			return {
+			const response = {
 				username,
 				metrics: data,
 				...(errors.length > 0 && { partial_errors: errors }),
 			};
+
+			// Publica cada métrica no MQTT
+			const resourceId = extractResourceId(username);
+			for (const [metric, metricData] of Object.entries(data)) {
+				mqttService
+					.publish("instagram", "profile", resourceId, metric, metricData)
+					.catch((err) =>
+						logger.error(
+							`[Instagram Service] Failed to publish ${metric} to MQTT:`,
+							err,
+						),
+					);
+			}
+
+			return response;
 		}
 	}
 }
+
+// Exporta instância singleton
+export const instagramService = new InstagramService();

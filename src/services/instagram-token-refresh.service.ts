@@ -68,7 +68,7 @@ export class InstagramTokenRefreshService {
 		// Atualiza cache
 		InstagramTokenRefreshService.tokenCache = {
 			token: tokenRecord?.token || null,
-			expiresAt: tokenRecord?.expiresAt || null,
+			expiresAt: tokenRecord?.expires_at || null,
 			lastFetch: new Date(),
 		};
 
@@ -90,9 +90,9 @@ export class InstagramTokenRefreshService {
 
 		return {
 			token: tokenRecord?.token || null,
-			expiresAt: tokenRecord?.expiresAt || null,
-			createdAt: tokenRecord?.createdAt || null,
-			updatedAt: tokenRecord?.updatedAt || null,
+			expiresAt: tokenRecord?.expires_at || null,
+			createdAt: tokenRecord?.created_at || null,
+			updatedAt: tokenRecord?.updated_at || null,
 		};
 	}
 
@@ -126,18 +126,18 @@ export class InstagramTokenRefreshService {
 		// Atualiza cache
 		InstagramTokenRefreshService.tokenCache = {
 			token: tokenRecord.token,
-			expiresAt: tokenRecord.expiresAt,
+			expiresAt: tokenRecord.expires_at,
 			lastFetch: new Date(),
 		};
 
 		const now = new Date();
-		const expiresAt = new Date(tokenRecord.expiresAt);
+		const expiresAt = new Date(tokenRecord.expires_at);
 		const daysUntilExpiry = Math.floor(
 			(expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
 		);
 
-		// Renova se faltar menos de 15 dias para expirar
-		return daysUntilExpiry <= 15;
+		// Renova se faltar menos de 10 dias para expirar
+		return daysUntilExpiry <= 10;
 	}
 
 	/**
@@ -185,13 +185,13 @@ export class InstagramTokenRefreshService {
 				where: { platform: "instagram" },
 				update: {
 					token: newToken,
-					expiresAt: expiresAt,
-					updatedAt: new Date(),
+					expires_at: expiresAt,
+					updated_at: new Date(),
 				},
 				create: {
 					platform: "instagram",
 					token: newToken,
-					expiresAt: expiresAt,
+					expires_at: expiresAt,
 				},
 			});
 
@@ -235,13 +235,13 @@ export class InstagramTokenRefreshService {
 			where: { platform: "instagram" },
 			update: {
 				token: token,
-				expiresAt: expiresAt,
-				updatedAt: new Date(),
+				expires_at: expiresAt,
+				updated_at: new Date(),
 			},
 			create: {
 				platform: "instagram",
 				token: token,
-				expiresAt: expiresAt,
+				expires_at: expiresAt,
 			},
 		});
 
@@ -271,14 +271,19 @@ export class InstagramTokenRefreshService {
 		if (envToken) {
 			console.log("⚠️  Using token from .env (consider migrating to database)");
 
-			// Migra o token do .env para o banco
+			// Migra o token do .env para o banco (ou atualiza se já existir)
 			try {
 				const expiresAt = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000); // 60 dias
-				await this.prisma.platformToken.create({
-					data: {
+				await this.prisma.platformToken.upsert({
+					where: { platform: "instagram" },
+					update: {
+						token: envToken,
+						expires_at: expiresAt,
+					},
+					create: {
 						platform: "instagram",
 						token: envToken,
-						expiresAt: expiresAt,
+						expires_at: expiresAt,
 					},
 				});
 

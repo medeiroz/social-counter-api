@@ -22,26 +22,26 @@ async function main() {
 		{
 			name: "Instagram",
 			slug: "instagram",
-			baseUrl: "https://www.instagram.com",
-			isActive: true,
+			base_url: "https://www.instagram.com",
+			is_active: true,
 		},
 		{
 			name: "YouTube",
 			slug: "youtube",
-			baseUrl: "https://www.youtube.com",
-			isActive: true,
+			base_url: "https://www.youtube.com",
+			is_active: true,
 		},
 		{
 			name: "TikTok",
 			slug: "tiktok",
-			baseUrl: "https://www.tiktok.com",
-			isActive: true,
+			base_url: "https://www.tiktok.com",
+			is_active: true,
 		},
 		{
 			name: "Twitch",
 			slug: "twitch",
-			baseUrl: "https://www.twitch.tv",
-			isActive: true,
+			base_url: "https://www.twitch.tv",
+			is_active: true,
 		},
 	];
 
