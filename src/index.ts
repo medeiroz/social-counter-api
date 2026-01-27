@@ -15,6 +15,7 @@ import schedulerRoutes from "./modules/scheduler/scheduler.routes";
 import { InstagramTokenRefreshService } from "./services/instagram-token-refresh.service";
 import { metricScheduler } from "./services/metric-scheduler.service";
 import { mqttService } from "./services/mqtt.service";
+import { cacheCleanupJob } from "./services/cache-cleanup-job.service";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -99,6 +100,9 @@ async function initializeServices() {
 
 		// Inicia o agendador de métricas
 		metricScheduler.start();
+
+		// Inicia o job de cleanup do cache
+		cacheCleanupJob.start();
 	} catch (error) {
 		console.error("❌ Failed to initialize services:", error);
 		console.warn("⚠️  Continuing without MQTT connection");
@@ -123,6 +127,7 @@ app.listen(PORT, async () => {
 process.on("SIGINT", async () => {
 	console.log("\n🛑 Shutting down gracefully...");
 	metricScheduler.stop();
+	cacheCleanupJob.stop();
 	await mqttService.disconnect();
 	process.exit(0);
 });
@@ -130,6 +135,7 @@ process.on("SIGINT", async () => {
 process.on("SIGTERM", async () => {
 	console.log("\n🛑 Shutting down gracefully...");
 	metricScheduler.stop();
+	cacheCleanupJob.stop();
 	await mqttService.disconnect();
 	process.exit(0);
 });
