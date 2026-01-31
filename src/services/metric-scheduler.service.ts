@@ -7,7 +7,7 @@ import { logger } from "../utils/logger";
 export class MetricSchedulerService {
 	private intervalId: NodeJS.Timeout | null = null;
 	private isRunning = false;
-	private checkIntervalMs = 60000; // Verifica a cada 1 minuto
+	private checkIntervalMs = 1000; // Verifica a cada 1 segundo
 
 	/**
 	 * Inicia o agendador
