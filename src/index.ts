@@ -102,7 +102,7 @@ async function initializeServices() {
 		metricScheduler.start();
 
 		// Inicia o job de cleanup do cache
-		cacheCleanupJob.start();
+		// cacheCleanupJob.start();
 	} catch (error) {
 		console.error("❌ Failed to initialize services:", error);
 		console.warn("⚠️  Continuing without MQTT connection");

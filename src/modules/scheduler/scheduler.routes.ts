@@ -16,7 +16,7 @@ const addScheduleSchema = z
 		metric: z.string().min(1),
 		interval_minutes: z
 			.number()
-			.min(0.5)
+			.min(0.1) // 6 segundos
 			.max(24 * 60)
 			.default(5),
 		expires_in_days: z.number().min(1).max(30).default(7),
@@ -69,7 +69,7 @@ const addScheduleSchema = z
  *                 example: views
  *               interval_minutes:
  *                 type: number
- *                 minimum: 0.5
+ *                 minimum: 0.1
  *                 maximum: 1440
  *                 default: 5
  *                 description: Intervalo de busca em minutos (mínimo 30 segundos)

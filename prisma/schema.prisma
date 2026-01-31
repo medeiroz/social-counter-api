@@ -81,7 +81,7 @@ model ScheduledMetric {
   metric      String   // followers, likes, views, etc
 
   // Controle de agendamento
-  interval_minutes    Float     @default(5) @map("interval_minutes") // Intervalo de busca em minutos (suporta decimais, ex: 0.5 para 30 segundos)
+  interval_minutes    Float     @default(5) @map("interval_minutes") // Intervalo de busca em minutos (suporta decimais, ex: 0.1 para 30 segundos)
   expires_at          DateTime  @map("expires_at") // Data de expiração do agendamento
   next_run_at         DateTime  @default(now()) @map("next_run_at") // Próxima execução agendada
   last_fetched_at     DateTime? @map("last_fetched_at") // Última vez que foi buscado
