@@ -3,6 +3,7 @@ import { InstagramTokenRefreshService } from "../../../services/instagram-token-
 import { logger } from "../../../utils/logger";
 import { retry } from "../../../utils/retry";
 import { BasePlatformAdapter } from "../base/platform.adapter";
+import { InstagramBlocker } from "./instagram.blocker";
 import type { MetricResult, MetricType } from "../base/platform.interface";
 import type {
 	InstagramMetricMetadata,
@@ -121,6 +122,11 @@ export class InstagramAdapter extends BasePlatformAdapter {
 	private async fetchProfileDataGraphAPI(
 		username: string,
 	): Promise<InstagramProfile> {
+		if (InstagramBlocker.isBlocked()) {
+			throw new Error(
+				"Instagram API temporarily blocked due to rate limit. Try again later.",
+			);
+		}
 		try {
 			// Para o Graph API, precisamos do ID da conta de negócio
 			// Se o username for fornecido, tentamos buscar pelo business discovery
@@ -172,6 +178,13 @@ export class InstagramAdapter extends BasePlatformAdapter {
 						`Instagram Graph API Error: ${errorData.message}`,
 						errorData,
 					);
+					if (
+						errorData.message?.includes("Application request limit reached") ||
+						(errorData.code === 4 && errorData.type === "OAuthException")
+					) {
+						InstagramBlocker.blockFor(70); // 1h10min
+						logger.warn("Instagram API blocked for 1h10min due to rate limit.");
+					}
 					throw new Error(`Instagram Graph API: ${errorData.message}`);
 				}
 			}
@@ -235,6 +248,11 @@ export class InstagramAdapter extends BasePlatformAdapter {
 	 * Busca dados do perfil do Instagram via API interna (fallback)
 	 */
 	private async fetchProfileData(username: string): Promise<InstagramProfile> {
+		if (InstagramBlocker.isBlocked()) {
+			throw new Error(
+				"Instagram API temporarily blocked due to rate limit. Try again later.",
+			);
+		}
 		// Tenta primeiro a API interna do Instagram
 		const apiUrl = `https://www.instagram.com/api/v1/users/web_profile_info/?username=${username}`;
 
@@ -347,6 +365,11 @@ export class InstagramAdapter extends BasePlatformAdapter {
 	 * Busca dados de um post específico do Instagram
 	 */
 	private async fetchPostData(shortcode: string): Promise<InstagramPost> {
+		if (InstagramBlocker.isBlocked()) {
+			throw new Error(
+				"Instagram API temporarily blocked due to rate limit. Try again later.",
+			);
+		}
 		try {
 			logger.info(
 				`Fetching Instagram post data for shortcode '${shortcode}'...`,
