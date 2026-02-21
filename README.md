@@ -73,7 +73,7 @@ MQTT_CLIENT_ID="social-counter-api"
 openssl rand -hex 32
 ```
 
-**For MQTT setup instructions, see [MQTT_SETUP.md](MQTT_SETUP.md)**
+**For MQTT setup instructions, see [docs/mqtt/SETUP.md](docs/mqtt/SETUP.md)**
 
 4. **Run database migrations**
 ```bash
@@ -504,6 +504,15 @@ docker inspect --format='{{.State.Health.Status}}' social-counter-api
 # Access container
 docker exec -it social-counter-api sh
 ```
+
+## 📚 Detailed Documentation
+
+Looking for advanced guides or architecture insights? We have moved our detailed documentation to the `docs/` directory:
+
+- 🏗️ **[Roadmap & Architecture](docs/architecture/ROADMAP_AND_ARCHITECTURE.md)**: Details about design decisions, Database Schema, and future plans.
+- ⏰ **[Scheduler Guide](docs/scheduler/GUIDE.md)**: How to schedule automatic metrics fetching.
+- 📡 **[MQTT Setup](docs/mqtt/SETUP.md)** & **[Topics Reference](docs/mqtt/TOPICS.md)**: Pub/Sub integration with IoT.
+- 📸 **[Instagram Graph API Setup](docs/instagram/SETUP.md)** & **[Token Refresh](docs/instagram/TOKEN_REFRESH.md)**: Specifics for authenticating and refreshing IG access.
 
 ## 🚧 Roadmap
 

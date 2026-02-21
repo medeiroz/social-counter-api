@@ -312,53 +312,14 @@ class InstagramAdapter implements PlatformAdapter {
 
 ## 🚀 Development Phases
 
-### **Phase 1: Foundation (Week 1)**
-- [x] Initial setup (Node, TypeScript, Express, Prisma)
-- [x] Create database schema (simplified)
-- [x] Implement cache system with PostgreSQL
-- [x] Simple logger (console)
-- [x] Standardized error middleware
-- [x] API Key authentication middleware
-- [ ] Rate limiting middleware (in-memory)
-- [ ] Validation with Zod
-
-### **Phase 2: First Platform - Instagram (Week 2)**
-- [x] Implement InstagramAdapter
-- [x] Endpoints: `/api/v1/instagram/account` and `/api/v1/instagram/post`
-- [x] PostgreSQL cache with 5-minute TTL
-- [x] Basic retry logic (3 attempts)
-- [x] Error handling
-- [x] Account metrics: followers, following, posts_count
-- [x] Post metrics: likes, comments, views
-
-### **Phase 3: Platform Expansion (Week 3)**
-- [x] Implement YouTubeAdapter (official API)
-- [x] Channel endpoints: `/api/v1/youtube/channel`
-- [x] Video endpoints: `/api/v1/youtube/video`
-- [x] Channel metrics: subscribers, video_count, total_views
-- [x] Video metrics: views, likes, comments
-- [x] Query string parameters for consistency
-- [ ] Implement TwitchAdapter (official API)
-- [ ] Implement TikTokAdapter
-
-### **Phase 4: Polish & Deploy (Week 4)**
-- [x] Basic documentation (README)
-- [x] Health check endpoint
-- [x] CORS and Helmet configured
-- [x] Docker support (Dockerfile + docker-compose)
-- [x] Authentication with API Keys
-- [x] with-metadata query parameter
-- [ ] Deploy to production (Railway or Render)
-- [ ] Manual testing in production
-
-### **📦 Phase 5: v2 - Optimizations (Future)**
+### 📦 Phase 5: v2 - Optimizations (Future Roadmap)
 - [ ] Add Redis for high-performance cache
 - [ ] Implement BullMQ for async jobs
-- [ ] Authentication system with API Keys
 - [ ] Distributed rate limiting with Redis
-- [ ] Background jobs (automatic refresh)
 - [ ] Advanced monitoring (Sentry, APM)
 - [ ] Load testing and optimization
+- [ ] TikTok adapter integration
+- [ ] Twitch adapter integration
 
 ---
 

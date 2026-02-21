@@ -48,7 +48,7 @@ Você também pode usar brokers na nuvem:
 
 ## 📡 Estrutura dos Tópicos
 
-Para detalhes completos sobre a estrutura de tópicos, wildcards e exemplos práticos, consulte: **[MQTT_TOPICS.md](MQTT_TOPICS.md)**
+Para detalhes completos sobre a estrutura de tópicos, wildcards e exemplos práticos, consulte: **[TOPICS.md](TOPICS.md)**
 
 Resumo: Os tópicos seguem o padrão `social-counter/{platform}/{resource}/{resource_id}/{metric}`
 
