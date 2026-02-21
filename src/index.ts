@@ -12,10 +12,10 @@ import adminRoutes from "./modules/admin/admin.routes";
 import instagramRoutes from "./modules/platforms/instagram/instagram.routes";
 import youtubeRoutes from "./modules/platforms/youtube/youtube.routes";
 import schedulerRoutes from "./modules/scheduler/scheduler.routes";
+import { cacheCleanupJob } from "./services/cache-cleanup-job.service";
 import { InstagramTokenRefreshService } from "./services/instagram-token-refresh.service";
 import { metricScheduler } from "./services/metric-scheduler.service";
 import { mqttService } from "./services/mqtt.service";
-import { cacheCleanupJob } from "./services/cache-cleanup-job.service";
 
 const app = express();
 const PORT = process.env.PORT || 3000;

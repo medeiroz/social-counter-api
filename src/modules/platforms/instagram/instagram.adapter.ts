@@ -3,8 +3,8 @@ import { InstagramTokenRefreshService } from "../../../services/instagram-token-
 import { logger } from "../../../utils/logger";
 import { retry } from "../../../utils/retry";
 import { BasePlatformAdapter } from "../base/platform.adapter";
-import { InstagramBlocker } from "./instagram.blocker";
 import type { MetricResult, MetricType } from "../base/platform.interface";
+import { InstagramBlocker } from "./instagram.blocker";
 import type {
 	InstagramMetricMetadata,
 	InstagramMetricType,
